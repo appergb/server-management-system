@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from src.models.server import db, Server, Metric
-import psutil
 import random
 from datetime import datetime
 
@@ -131,21 +130,21 @@ def get_server_metrics(server_id):
         server = Server.query.get_or_404(server_id)
         
         # 模拟获取服务器指标（实际应该通过SSH连接获取）
-        # 这里使用本地系统指标作为示例
         if server.status == 'online':
-            cpu_percent = psutil.cpu_percent(interval=1)
-            memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
-            network = psutil.net_io_counters()
+            # 生成模拟数据
+            cpu_percent = round(random.uniform(20, 90), 1)
+            memory_percent = round(random.uniform(30, 95), 1)
+            disk_percent = round(random.uniform(40, 85), 1)
+            network_speed = round(random.uniform(0.5, 3.0), 1)
             
             # 创建新的指标记录
             metric = Metric(
                 server_id=server_id,
                 cpu_usage=cpu_percent,
-                memory_usage=memory.percent,
-                disk_usage=disk.percent,
-                network_in=network.bytes_recv / (1024 * 1024),  # Convert to MB
-                network_out=network.bytes_sent / (1024 * 1024)
+                memory_usage=memory_percent,
+                disk_usage=disk_percent,
+                network_in=network_speed,
+                network_out=network_speed * 0.8
             )
             db.session.add(metric)
             db.session.commit()
@@ -153,10 +152,10 @@ def get_server_metrics(server_id):
             return jsonify({
                 'success': True,
                 'data': {
-                    'cpu': round(cpu_percent, 1),
-                    'memory': round(memory.percent, 1),
-                    'disk': round(disk.percent, 1),
-                    'network': round(random.uniform(0.5, 3.0), 1)
+                    'cpu': cpu_percent,
+                    'memory': memory_percent,
+                    'disk': disk_percent,
+                    'network': network_speed
                 }
             }), 200
         else:
