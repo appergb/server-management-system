@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Backend service (Flask + Frontend static files)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: server-management-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/src/database:/app/src/database
+    restart: unless-stopped
+    networks:
+      - server-management-network
+
+  # Nginx reverse proxy (optional, for production)
+  nginx:
+    image: nginx:alpine
+    container_name: server-management-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - server-management-network
+
+networks:
+  server-management-network:
+    driver: bridge
+
+volumes:
+  database:
+    driver: local
+
